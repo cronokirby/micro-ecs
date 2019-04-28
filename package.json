@@ -2,10 +2,11 @@
   "name": "micro-ecs",
   "version": "0.1.0",
   "description": "A small ECS framework, with focus on TypeScript",
+  "repository": "https://github.com/cronokirby/micro-ecs",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "npx mocha --reporter spec --require ts-node/register src/**/*.test.ts"
   },
   "keywords": [
     "gamedev",
@@ -13,5 +14,14 @@
     "typescript"
   ],
   "author": "Lúcás Meier",
-  "license": "MIT"
+  "license": "MIT",
+  "dependencies": {},
+  "devDependencies": {
+    "@types/chai": "^4.1.7",
+    "@types/mocha": "^5.2.6",
+    "chai": "^4.2.0",
+    "mocha": "^6.1.4",
+    "ts-node": "^8.1.0",
+    "typescript": "^3.4.5"
+  }
 }
