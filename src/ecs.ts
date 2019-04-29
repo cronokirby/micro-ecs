@@ -44,8 +44,14 @@ export class Query<M, K extends keyof M> {
     }
 }
 
-export function select<M, K extends keyof M>(...keys: K[]): Query<M, K> {
-    return new Query(...keys);
+export class QueryBuilder<M> {
+    select<K extends keyof M>(...keys: K[]): Query<M, K> {
+        return new Query(...keys);
+    }
+}
+
+export function query<M>(): QueryBuilder<M> {
+    return new QueryBuilder<M>();
 }
 
 
