@@ -1,6 +1,6 @@
 export type QueryFilter<M, K extends keyof M> = (entity: Pick<M, K>) => boolean;
 export type QueryRun<M, K extends keyof M> = (entity: Pick<M, K>) => void;
-export type QueryMap<M, K extends keyof M> = (entity: Pick<M, K>) => Partial<M>;
+export type QueryMap<M, K extends keyof M> = (entity: Pick<M, K>) => Partial<M> | undefined;
 
 interface QueryI<M, K extends keyof M> {
     keys: K[],
@@ -55,15 +55,42 @@ export function query<M>(): QueryBuilder<M> {
 }
 
 
+function isEmptyObject(obj: any): boolean {
+    return Object.keys(obj).length === 0;
+}
+
+
 export class World<M> {
     private _entities: Partial<M>[] = [];
+    private _free: number[] = [];
 
     add(...entities: Partial<M>[]) {
-        this._entities.push(...entities);
+        for (const ent of entities) {
+            const i = this._free.pop();
+            if (i) {
+                this._entities[i] = ent;
+            } else {
+                this._entities.push(ent);
+            }
+        }
     }
 
     allEntities(): Partial<M>[] {
         return this._entities.slice(0);
+    }
+
+    private adjustAt(index: number, diff: Partial<M>) {
+        const entity = this._entities[index];
+        for (const key in diff) {
+            if (diff[key]) {
+                entity[key] = diff[key];
+            } else {
+                delete entity[key];
+                if (isEmptyObject(entity)) {
+                    this._free.push(index);
+                }
+            }
+        }
     }
 
     run<K extends keyof M>(q: Query<M, K>) {
@@ -75,24 +102,25 @@ export class World<M> {
             return true;
         };
         for (let i = 0; i < this._entities.length; ++i) {
-            const e = this._entities[i];
-            if (!hasAllKeys(e)) continue;
+            const ent = this._entities[i];
+
+            if (!hasAllKeys(ent)) continue;
             const picked = {} as Pick<M, K>;
             for (const key of keys) {
-                picked[key] = e[key] as M[K];
+                picked[key] = ent[key] as M[K];
             }
+
             if (filter && !filter(picked)) continue;
+
             if (foreach) foreach(picked);
-            if (map) {
-                const mapped = map(picked);
-                for (const key in mapped) {
-                    if (mapped[key]) {
-                        this._entities[i][key] = mapped[key];
-                    } else {
-                        delete this._entities[i][key];
-                    }
-                }
+
+            if (!map) continue;
+            const diff = map(picked);
+            if (!diff) {
+                this._free.push(i);
+                continue;
             }
+            this.adjustAt(i, diff);
         }
     }
 }
