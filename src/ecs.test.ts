@@ -40,4 +40,13 @@ describe('Query', () => {
         world.run(select<Components, 'name'>('name').forEach(x => items.push(x)));
         chai.expect(items).to.eql(expected);
     });
+    it('should be able to filter properties', () => {
+        const expected = [
+            { name: 'old', age: 20 }
+        ];
+        const items: { name?: string, age: number }[] = [];
+        const sel = select<Components, 'name' | 'age'>('name', 'age');
+        world.run(sel.filter(x => x.age >= 18).forEach(x => items.push(x)));
+        chai.expect(items).to.eql(expected);
+    });
 });

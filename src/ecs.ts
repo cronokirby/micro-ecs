@@ -70,12 +70,12 @@ export class World<M> {
         };
         for (let i = 0; i < this._entities.length; ++i) {
             const e = this._entities[i];
-            if (!hasAllKeys(e)) return;
+            if (!hasAllKeys(e)) continue;
             const picked = {} as Pick<M, K>;
             for (const key of keys) {
                 picked[key] = e[key] as M[K];
             }
-            if (filter && !filter(picked)) return;
+            if (filter && !filter(picked)) continue;
             if (foreach) foreach(picked);
             if (map) this._entities[i] = map(picked);
         }
