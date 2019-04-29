@@ -49,4 +49,15 @@ describe('Query', () => {
         world.run(sel.filter(x => x.age >= 18).forEach(x => items.push(x)));
         chai.expect(items).to.eql(expected);
     });
+    it('should be able to remove properties', () => {
+        const expected = [
+            { name: 'young' },
+            { name: 'young' },
+            { name: 'old' },
+            { age: 20 }
+        ];
+        const sel = select<Components, 'name' | 'age'>('name', 'age');
+        world.run(sel.map(x => ({age: undefined})));
+        chai.expect(world.allEntities()).to.eql(expected);
+    })
 });

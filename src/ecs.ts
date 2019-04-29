@@ -77,7 +77,16 @@ export class World<M> {
             }
             if (filter && !filter(picked)) continue;
             if (foreach) foreach(picked);
-            if (map) this._entities[i] = map(picked);
+            if (map) {
+                const mapped = map(picked);
+                for (const key in mapped) {
+                    if (mapped[key]) {
+                        this._entities[i][key] = mapped[key];
+                    } else {
+                        delete this._entities[i][key];
+                    }
+                }
+            }
         }
     }
 }
