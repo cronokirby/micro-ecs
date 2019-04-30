@@ -28,13 +28,9 @@ interface QueryI<M, K extends keyof M> {
  * ```
  */
 export class Query<M, K extends keyof M> {
-    private _keys: K[];
-    private _filter?: QueryFilter<M, K>;
-    private _foreach?: QueryRun<M, K>;
-    private _map?: QueryMap<M, K>;
 
-    constructor(...keys: K[]) {
-        this._keys = keys;
+    constructor(private _query: QueryI<M, K>) {
+
     }
 
     /**
@@ -44,11 +40,10 @@ export class Query<M, K extends keyof M> {
      * and the query will only continue with those entities for which
      * this function returned true.
      * 
-     * @param f the filter function
+     * @param filter the filter function
      */
-    filter(f: QueryFilter<M, K>): Query<M, K> {
-        this._filter = f;
-        return this;
+    filter(filter: QueryFilter<M, K>): Query<M, K> {
+        return new Query({ ...this._query, filter });
     }
 
     /**
@@ -59,11 +54,10 @@ export class Query<M, K extends keyof M> {
      * but cannot be used to add or remove components, or to delete entities.
      * To do those operations @link { map } should be used instead.
      * 
-     * @param f the function to run for every entity
+     * @param foreach the function to run for every entity
      */
-    forEach(f: QueryRun<M, K>): Query<M, K> {
-        this._foreach = f;
-        return this;
+    forEach(foreach: QueryRun<M, K>): Query<M, K> {
+        return new Query({ ...this._query, foreach });
     }
 
     /**
@@ -78,18 +72,12 @@ export class Query<M, K extends keyof M> {
      * 
      * @param f the diff function for every entity.
      */
-    map(f: QueryMap<M, K>): Query<M, K> {
-        this._map = f;
-        return this;
+    map(map: QueryMap<M, K>): Query<M, K> {
+        return new Query({ ...this._query, map });
     }
 
     build(): QueryI<M, K> {
-        return {
-            keys: this._keys,
-            filter: this._filter,
-            foreach: this._foreach,
-            map: this._map
-        };
+        return this._query;
     }
 }
 
@@ -115,7 +103,7 @@ export class QueryBuilder<M> {
      * @param keys the subset of keys to select from the model.
      */
     select<K extends keyof M>(...keys: K[]): Query<M, K> {
-        return new Query(...keys);
+        return new Query({ keys });
     }
 }
 
