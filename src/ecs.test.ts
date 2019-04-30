@@ -60,4 +60,12 @@ describe('Query', () => {
         world.run(baseQuery.select('name', 'age').map(_ => ({ age: undefined })));
         chai.expect(world.allEntities()).to.eql(expected);
     })
+    it('should be able to get just the first item', () => {
+        const expected = [
+            { name: 'young' },
+        ]
+        const items: { name: string }[] = [];
+        world.run(baseQuery.select('name').first().forEach(x => items.push(x)));
+        chai.expect(items).to.eql(expected);
+    });
 });

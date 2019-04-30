@@ -4,6 +4,7 @@ export type QueryMap<M, K extends keyof M> = (entity: Pick<M, K>) => Partial<M> 
 
 interface QueryI<M, K extends keyof M> {
     keys: K[],
+    first: boolean,
     filter?: QueryFilter<M, K>,
     foreach?: QueryRun<M, K>
     map?: QueryMap<M, K>
@@ -44,6 +45,16 @@ export class Query<M, K extends keyof M> {
      */
     filter(filter: QueryFilter<M, K>): Query<M, K> {
         return new Query({ ...this._query, filter });
+    }
+
+    /**
+     * Make this query only run on the first element found.
+     * 
+     * Sometimes, we only want to match the first item,
+     * and this function allows us to do that.
+     */
+    first(): Query<M, K> {
+        return new Query({ ...this._query, first: true });
     }
 
     /**
@@ -103,7 +114,7 @@ export class QueryBuilder<M> {
      * @param keys the subset of keys to select from the model.
      */
     select<K extends keyof M>(...keys: K[]): Query<M, K> {
-        return new Query({ keys });
+        return new Query({ keys, first: false });
     }
 }
 
@@ -171,7 +182,7 @@ export class World<M> {
      * @param q the query to run over the world.
      */
     run<K extends keyof M>(q: Query<M, K>) {
-        const { keys, filter, foreach, map } = q.build();
+        const { keys, first, filter, foreach, map } = q.build();
         const hasAllKeys = (e: Partial<M>) => {
             for (const key of keys) {
                 if (e[key] === undefined) return false;
@@ -181,12 +192,15 @@ export class World<M> {
         // These exist in order to not iterate over added entities
         const length = this._entities.length;
         const free = this._free.slice(0);
+        let hasRun = false;
         for (let i = 0; i < length; ++i) {
             if (free.indexOf(i) >= 0) continue;
             const ent = this._entities[i];
             if (!ent) continue;
 
             if (!hasAllKeys(ent)) continue;
+            if (hasRun && first) return;
+            hasRun = true;
             // This is safe since we will fill all of the keys
             const picked = {} as Pick<M, K>;
             for (const key of keys) {
