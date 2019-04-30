@@ -68,4 +68,12 @@ describe('Query', () => {
         world.run(baseQuery.select('name').first().forEach(x => items.push(x)));
         chai.expect(items).to.eql(expected);
     });
+    it('should be able to get the first filtered item', () => {
+        const expected = [
+            {age: 20}
+        ];
+        const items: {age: number}[] = [];
+        world.run(baseQuery.select('age').filter(({age}) => age >= 18).first().forEach(x => items.push(x)));
+        chai.expect(items).to.eql(expected);
+    })
 });

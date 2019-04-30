@@ -38,7 +38,17 @@ world.run(nameAndAge);
 ```ts
 const namedAdults = baseQuery
     .select('name', 'age')
-    .filter({age} => age >= 18)
+    .filter(x => x.age >= 18)
+    .forEach(console.log);
+world.run(namedAdults);
+```
+
+### Selecting just the first matching item
+```ts
+const firstAdult = baseQuery
+    .select('age')
+    .filter(x => x.age >= 18) 
+    .first()
     .forEach(console.log);
 world.run(namedAdults);
 ```

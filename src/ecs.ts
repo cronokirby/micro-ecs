@@ -192,15 +192,14 @@ export class World<M> {
         // These exist in order to not iterate over added entities
         const length = this._entities.length;
         const free = this._free.slice(0);
-        let hasRun = false;
+        let hasMatched = false;
         for (let i = 0; i < length; ++i) {
             if (free.indexOf(i) >= 0) continue;
             const ent = this._entities[i];
             if (!ent) continue;
 
             if (!hasAllKeys(ent)) continue;
-            if (hasRun && first) return;
-            hasRun = true;
+
             // This is safe since we will fill all of the keys
             const picked = {} as Pick<M, K>;
             for (const key of keys) {
@@ -213,13 +212,16 @@ export class World<M> {
 
             if (foreach) foreach(picked);
 
-            if (!map) continue;
-            const diff = map(picked);
-            if (!diff) {
-                this.removeAt(i);
-                continue;
+            if (map) {
+                const diff = map(picked);
+                if (!diff) {
+                    this.removeAt(i);
+                    continue;
+                }
+                this.adjustAt(i, diff);
             }
-            this.adjustAt(i, diff);
+            // if we reach this point, we've matched an item
+            if (first) return;
         }
     }
 
