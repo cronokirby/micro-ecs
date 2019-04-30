@@ -9,6 +9,24 @@ interface QueryI<M, K extends keyof M> {
     map?: QueryMap<M, K>
 }
 
+/**
+ * Represents a query operation on a given Model.
+ * 
+ * The main way to create a Query is via the @link {query} function.
+ * 
+ * A Query is parameterised on a given Model, and a subset of that Model's
+ * keys. When run on a given World, the Query will find all entities
+ * with all the keys present, optionally filter out those entities
+ * using a function. Then will run the `forEach` function for each of these
+ * entities, as well as use the `map` function provided to modify
+ * the entities.
+ * 
+ * Here's an example of a query that runs a function for every adult entity.
+ * ```ts
+ * const baseQuery = query<Person>();
+ * baseQuery.select('age').filter({age} => age >= 18).forEach(console.log);
+ * ```
+ */
 export class Query<M, K extends keyof M> {
     private _keys: K[];
     private _filter?: QueryFilter<M, K>;
@@ -19,16 +37,47 @@ export class Query<M, K extends keyof M> {
         this._keys = keys;
     }
 
+    /**
+     * Add a filter function to this query.
+     * 
+     * This function will run for every entity with the right keys,
+     * and the query will only continue with those entities for which
+     * this function returned true.
+     * 
+     * @param f the filter function
+     */
     filter(f: QueryFilter<M, K>): Query<M, K> {
         this._filter = f;
         return this;
     }
 
+    /**
+     * Add a function that should be run for every selected entity.
+     * 
+     * This function will be called on every selected entity.
+     * This can be used to modify components if they are reference types,
+     * but cannot be used to add or remove components, or to delete entities.
+     * To do those operations @link { map } should be used instead.
+     * 
+     * @param f the function to run for every entity
+     */
     forEach(f: QueryRun<M, K>): Query<M, K> {
         this._foreach = f;
         return this;
     }
 
+    /**
+     * Add a function used to modify each selected entity.
+     * 
+     * The function takes in a subset of the Model with the right keys
+     * fully present, and returns a diff of sorts. For each key present
+     * in the diff, if that key is defined, then `entity[key] = diff[key]`.
+     * If the key is explicitly undefined, e.g. `{age: undefined}`
+     * then the key is removed completely from the entity. If the diff
+     * is explicitly `undefined` then the entity is completely removed.
+     * 
+     * @param f the diff function for every entity.
+     */
     map(f: QueryMap<M, K>): Query<M, K> {
         this._map = f;
         return this;
