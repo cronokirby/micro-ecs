@@ -1,6 +1,6 @@
 {
   "name": "micro-ecs",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "A small ECS framework, with focus on TypeScript",
   "repository": "https://github.com/cronokirby/micro-ecs",
   "main": "dist/index.js",
