@@ -110,7 +110,7 @@ function isEmptyObject(obj: any): boolean {
 
 
 export class World<M> {
-    private _entities: Partial<M>[] = [];
+    private _entities: (Partial<M> | undefined)[] = [];
     private _free: number[] = [];
 
     add(...entities: Partial<M>[]) {
@@ -125,21 +125,8 @@ export class World<M> {
     }
 
     allEntities(): Partial<M>[] {
-        return this._entities.slice(0);
-    }
-
-    private adjustAt(index: number, diff: Partial<M>) {
-        const entity = this._entities[index];
-        for (const key in diff) {
-            if (diff[key]) {
-                entity[key] = diff[key];
-            } else {
-                delete entity[key];
-                if (isEmptyObject(entity)) {
-                    this._free.push(index);
-                }
-            }
-        }
+        // This is fine since we're filtering out all the undefined entities
+        return this._entities.filter(Boolean) as Partial<M>[];
     }
 
     run<K extends keyof M>(q: Query<M, K>) {
@@ -152,10 +139,14 @@ export class World<M> {
         };
         for (let i = 0; i < this._entities.length; ++i) {
             const ent = this._entities[i];
+            if (!ent) continue;
 
             if (!hasAllKeys(ent)) continue;
+            // This is safe since we will fill all of the keys
             const picked = {} as Pick<M, K>;
             for (const key of keys) {
+                // This is safe since we filtered out the entities that
+                // have all the keys we need
                 picked[key] = ent[key] as M[K];
             }
 
@@ -166,10 +157,30 @@ export class World<M> {
             if (!map) continue;
             const diff = map(picked);
             if (!diff) {
-                this._free.push(i);
+                this.removeAt(i);
                 continue;
             }
             this.adjustAt(i, diff);
+        }
+    }
+
+    private removeAt(index: number) {
+        this._entities[index] = undefined;
+        this._free.push(index);
+    }
+
+    private adjustAt(index: number, diff: Partial<M>) {
+        // This should have already been checked before calling this function
+        const entity = this._entities[index] as Partial<M>;
+        for (const key in diff) {
+            if (diff[key]) {
+                entity[key] = diff[key];
+            } else {
+                delete entity[key];
+                if (isEmptyObject(entity)) {
+                    this.removeAt(index);
+                }
+            }
         }
     }
 }
