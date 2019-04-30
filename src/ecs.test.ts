@@ -57,7 +57,7 @@ describe('Query', () => {
             { name: 'old' },
             { age: 20 }
         ];
-        world.run(baseQuery.select('name', 'age').map(_ => ({age: undefined})));
+        world.run(baseQuery.select('name', 'age').map(_ => ({ age: undefined })));
         chai.expect(world.allEntities()).to.eql(expected);
     })
 });

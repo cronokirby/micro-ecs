@@ -93,12 +93,37 @@ export class Query<M, K extends keyof M> {
     }
 }
 
+/**
+ * This class exists to aid type inference.
+ * 
+ * The main way to use this class is by doing:
+ * ```ts
+ * query<Type>().select('key1', 'key2');
+ * ```
+ * This class allows us to provide just the first type parameter, the Model,
+ * to a Query without having to provide the keys we're selecting on,
+ * which would be redundant.
+ * 
+ * Instances of this class are safe to be cached, and in fact should be.
+ * Ideally, next to the declaration of your model type, you'd also have
+ * a `const baseQuery = query<Model>()` declaration.
+ */
 export class QueryBuilder<M> {
+    /**
+     * This creates a new query that will only match entities with the given keys.
+     * 
+     * @param keys the subset of keys to select from the model.
+     */
     select<K extends keyof M>(...keys: K[]): Query<M, K> {
         return new Query(...keys);
     }
 }
 
+/**
+ * Start a query for a given model.
+ * 
+ * This is just an alias for the constructor of `QueryBuilder`.
+ */
 export function query<M>(): QueryBuilder<M> {
     return new QueryBuilder<M>();
 }
@@ -109,10 +134,23 @@ function isEmptyObject(obj: any): boolean {
 }
 
 
+/**
+ * Represents a repository for all the entities that exist.
+ * 
+ * A world allows us to add entities, and then query them.
+ */
 export class World<M> {
     private _entities: (Partial<M> | undefined)[] = [];
     private _free: number[] = [];
 
+    /**
+     * Add new entities to the world.
+     * 
+     * Note that the order of entities is undefined, and should not
+     * be depended on.
+     * 
+     * @param entities the entities to add to the world.
+     */
     add(...entities: Partial<M>[]) {
         for (const ent of entities) {
             const i = this._free.pop();
@@ -124,11 +162,26 @@ export class World<M> {
         }
     }
 
+    /**
+     * Get all entities in this World.
+     * 
+     * This is mainly useful as a debugging tool.
+     */
     allEntities(): Partial<M>[] {
         // This is fine since we're filtering out all the undefined entities
         return this._entities.filter(Boolean) as Partial<M>[];
     }
 
+    /**
+     * Run a given query on the entities in this World.
+     * 
+     * For more information about how this works, see the `Query` type itself.
+     * 
+     * Note that the order of entities is not defined, and should not be
+     * depended on.
+     * 
+     * @param q the query to run over the world.
+     */
     run<K extends keyof M>(q: Query<M, K>) {
         const { keys, filter, foreach, map } = q.build();
         const hasAllKeys = (e: Partial<M>) => {
