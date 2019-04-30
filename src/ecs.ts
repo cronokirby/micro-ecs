@@ -178,7 +178,11 @@ export class World<M> {
             }
             return true;
         };
-        for (let i = 0; i < this._entities.length; ++i) {
+        // These exist in order to not iterate over added entities
+        const length = this._entities.length;
+        const free = this._free.slice(0);
+        for (let i = 0; i < length; ++i) {
+            if (free.indexOf(i) >= 0) continue;
             const ent = this._entities[i];
             if (!ent) continue;
 
