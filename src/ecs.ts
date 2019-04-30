@@ -174,7 +174,7 @@ export class World<M> {
         const { keys, filter, foreach, map } = q.build();
         const hasAllKeys = (e: Partial<M>) => {
             for (const key of keys) {
-                if (!e[key]) return false;
+                if (e[key] === undefined) return false;
             }
             return true;
         };
